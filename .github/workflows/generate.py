@@ -1,40 +1,66 @@
 import os
 from google import genai
 
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+api_key = os.environ.get("GEMINI_API_KEY")
+
+if not api_key:
+    raise RuntimeError("GEMINI_API_KEY is missing")
+
+client = genai.Client(api_key=api_key)
 
 prompt = """
-You are writing for an original YouTube channel that uses simple
-black-and-white stick-figure illustrations.
+Create an original YouTube educational/self-improvement video
+for a channel using simple black-and-white stick-figure illustrations.
 
-Create ONE original 10-15 minute educational/self-improvement video.
+Choose ONE interesting topic.
 
-Choose a useful topic with broad appeal.
+The finished video should be approximately 10-15 minutes long.
 
-Return:
-1. A catchy YouTube title
-2. A 10-15 minute narration script
-3. A scene list with approximately 30-40 static scenes
+Return these sections:
 
-For every scene provide:
-- scene number
-- short narration
-- image description
+TITLE:
+A clickable but honest YouTube title.
 
-Do NOT copy any existing YouTube creator.
-Make the content original, useful and entertaining.
+SCRIPT:
+Write approximately 1800-2200 words of narration.
+Make it conversational, useful and entertaining.
+Do not copy another creator.
 
-Format the answer clearly.
+SCENES:
+Create approximately 35-45 scenes.
+
+For every scene use this format:
+
+SCENE 1
+NARRATION: ...
+IMAGE: ...
+
+The IMAGE description must describe one static
+black-and-white stick-figure illustration.
+
+Keep the visual style consistent:
+simple hand-drawn stick figures,
+white background,
+black lines,
+minimal objects,
+clear facial expressions,
+16:9 composition.
+
+Make the content completely original.
 """
 
 response = client.models.generate_content(
-    model="gemini-3.7-flash",
+    model="gemini-2.5-flash",
     contents=prompt
 )
+
+if not response.text:
+    raise RuntimeError("Gemini returned an empty response")
 
 os.makedirs("output", exist_ok=True)
 
 with open("output/script.txt", "w", encoding="utf-8") as f:
     f.write(response.text)
 
-print("Script generated successfully!")
+print("SUCCESS: script generated")
+print("Characters:", len(response.text))
